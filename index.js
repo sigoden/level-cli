@@ -89,24 +89,35 @@ async function main() {
   const [cmd] = argv._;
   const dbPath = argv.db || ".";
   const exist = fs.existsSync(path.resolve(dbPath, "CURRENT"));
+  const initdb = () => {
+    return new Promise((resolve, reject) => {
+      levelup(
+        encode(leveldown(dbPath), { valueEncoding: argv.encoding }),
+        (err, db) => {
+          if (err) {
+            return reject(new Error(`db throws ${err.message}`));
+          }
+          resolve(db);
+        }
+      );
+    });
+  };
   let db;
-  if (!exist) {
-    if (cmd === "set" || cmd === "put") {
+  if (exist) {
+    db = await initdb();
+  } else {
+    if (["set", "put"].includes(cmd)) {
       const { create } = await prompts({
         type: "confirm",
         name: "create",
         message: "Level db not exist, create?",
         initial: true,
       });
-      if (!create) {
-        fatal("");
-      }
-      db = levelup(encode(leveldown(dbPath), { valueEncoding: argv.encoding }));
+      if (!create) return;
+      db = await initdb();
     } else {
-      return fatal("db not exist");
+      throw new Error("db not exist");
     }
-  } else {
-    db = levelup(encode(leveldown(dbPath), { valueEncoding: argv.encoding }));
   }
   const cmds = {
     async get(key) {
@@ -114,14 +125,14 @@ async function main() {
         const value = await db.get(key);
         console.log(serialValue(value));
       } catch (err) {
-        return fatal(`key not found`);
+        throw new Error(`key not found`);
       }
     },
     async put(key, value) {
       try {
         await db.put(key, value);
       } catch (err) {
-        return fatal(`set value throw ${err.message}`);
+        throw new Error(`set value throws ${err.message}`);
       }
     },
     async del(key, pattern) {
@@ -133,7 +144,7 @@ async function main() {
             all: true,
           });
           if (keys.length === 0) {
-            return fatal(`key not found`);
+            throw new Error(`key not found`);
           }
           const batch = db.batch();
           keys.forEach((key) => batch.del(key));
@@ -142,7 +153,7 @@ async function main() {
           await db.del(key);
         }
       } catch (err) {
-        return fatal(`delete value throw ${err.message}`);
+        throw new Error(`delete value throws ${err.message}`);
       }
     },
     async list({ onlyKeys, onlyValues, reverse, pattern, limit, offset, all }) {
@@ -195,20 +206,15 @@ async function main() {
       }
     }
   } else {
-    return fatal("unknown cmd");
+    throw new Error("unknown cmd");
   }
-}
-
-function fatal(msg) {
-  console.log(msg);
-  process.exit(1);
 }
 
 function parsePattern(key) {
   try {
     return new RegExp(key);
   } catch {
-    return fatal(`invalid pattern`);
+    throw new Error(`invalid pattern`);
   }
 }
 
@@ -219,4 +225,7 @@ function serialValue(value) {
   return value;
 }
 
-main();
+main().catch((err) => {
+  console.log(err.message);
+  process.exit(1);
+});
