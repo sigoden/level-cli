@@ -6,6 +6,7 @@ const levelup = require("levelup");
 const leveldown = require("leveldown");
 const encode = require("encoding-down");
 const parseRegex = require("regex-parser");
+const Table = require("cli-table");
 
 const argv = yargs(hideBin(process.argv))
   .usage("Usage: $0 [cmd] [options]")
@@ -49,6 +50,10 @@ const argv = yargs(hideBin(process.argv))
       .option("reverse", {
         type: "boolean",
         description: "Reverse records",
+      })
+      .option("json", {
+        type: "boolean",
+        description: "Print records in json format",
       })
       .option("only-keys", {
         type: "boolean",
@@ -162,7 +167,14 @@ async function main() {
     if (argv["only-keys"] || argv["only-values"]) {
       records.forEach((key) => console.log(key));
     } else {
-      console.log(JSON.stringify(records));
+      if (argv.json) {
+        console.log(JSON.stringify(records));
+      } else {
+        const table = new Table({
+          rows: records,
+        });
+        console.log(table.toString());
+      }
     }
   } else {
     return fatal("unknown cmd");
