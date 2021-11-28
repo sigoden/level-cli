@@ -5,7 +5,6 @@ const { hideBin } = require("yargs/helpers");
 const levelup = require("levelup");
 const leveldown = require("leveldown");
 const encode = require("encoding-down");
-const parseRegex = require("regex-parser");
 const Table = require("cli-table");
 
 const argv = yargs(hideBin(process.argv))
@@ -23,7 +22,7 @@ const argv = yargs(hideBin(process.argv))
       description: "Delete records by pattern",
     });
   })
-  .command("list [options]", "Delete value", (yargs) => {
+  .command("list [options]", "List records", (yargs) => {
     return yargs
       .option("all", {
         alias: "a",
@@ -57,10 +56,12 @@ const argv = yargs(hideBin(process.argv))
       })
       .option("only-keys", {
         type: "boolean",
+        alias: "k",
         description: "List keys only",
         conflicts: ["only-values"],
       })
       .option("only-values", {
+        alias: "v",
         type: "boolean",
         description: "List values only",
         conflicts: ["only-keys"],
@@ -188,7 +189,7 @@ function fatal(msg) {
 
 function parsePattern(key) {
   try {
-    return parseRegex(key);
+    return new RegExp(key);
   } catch {
     return fatal(`invalid pattern`);
   }
