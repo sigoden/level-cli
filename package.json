@@ -2,6 +2,9 @@
   "name": "@sigodenjs/level-cli",
   "version": "1.0.0",
   "description": "leveldb cli and repl",
+  "publishConfig": {
+    "access": "public"
+  },
   "bin": "index.js",
   "scripts": {
     "lint": "eslint .",
