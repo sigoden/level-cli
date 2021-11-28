@@ -4,6 +4,7 @@
   "description": "leveldb cli and repl",
   "bin": "index.js",
   "scripts": {
+    "lint": "eslint .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -17,9 +18,14 @@
   "devDependencies": {
     "eslint": "^8.3.0",
     "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^4.0.0",
     "prettier": "^2.5.0"
   },
   "dependencies": {
+    "encoding-down": "^7.1.0",
+    "leveldown": "^6.1.0",
+    "levelup": "^5.1.1",
+    "regex-parser": "^2.2.11",
     "yargs": "^17.2.1"
   }
 }

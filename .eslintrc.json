@@ -6,6 +6,6 @@
         "node": true
     },
     "extends": [
-        "prettier"
+        "plugin:prettier/recommended"
     ]
 }
