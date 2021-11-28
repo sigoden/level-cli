@@ -1,0 +1,25 @@
+{
+  "name": "@sigodenjs/level-cli",
+  "version": "0.1.0",
+  "description": "leveldb cli and repl",
+  "bin": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "leveldb",
+    "level",
+    "cli",
+    "repl"
+  ],
+  "author": "sigoden hwang <sigoden@gmail.com>",
+  "license": "ISC",
+  "devDependencies": {
+    "eslint": "^8.3.0",
+    "eslint-config-prettier": "^8.3.0",
+    "prettier": "^2.5.0"
+  },
+  "dependencies": {
+    "yargs": "^17.2.1"
+  }
+}
