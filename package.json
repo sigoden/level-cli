@@ -22,10 +22,11 @@
     "index.js"
   ],
   "dependencies": {
-    "cli-table": "^0.3.9",
+    "cli-table3": "^0.6.0",
     "encoding-down": "^7.1.0",
     "leveldown": "^6.1.0",
     "levelup": "^5.1.1",
+    "prompts": "^2.4.2",
     "yargs": "^17.2.1"
   },
   "devDependencies": {

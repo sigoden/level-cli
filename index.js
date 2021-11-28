@@ -1,11 +1,14 @@
 #!/usr/bin/env node
 
+const fs = require("fs");
+const path = require("path");
 const yargs = require("yargs/yargs");
 const { hideBin } = require("yargs/helpers");
+const prompts = require("prompts");
 const levelup = require("levelup");
 const leveldown = require("leveldown");
 const encode = require("encoding-down");
-const Table = require("cli-table");
+const Table = require("cli-table3");
 
 const argv = yargs(hideBin(process.argv))
   .usage("Usage: $0 [cmd] [options]")
@@ -83,20 +86,35 @@ const argv = yargs(hideBin(process.argv))
   .parse();
 
 async function main() {
-  const db = levelup(
-    encode(leveldown(argv.db || "."), { valueEncoding: argv.encoding })
-  );
+  const [cmd] = argv._;
+  const dbPath = argv.db || ".";
+  const exist = fs.existsSync(path.resolve(dbPath, "CURRENT"));
+  let db;
+  if (!exist) {
+    if (cmd === "set" || cmd === "put") {
+      const { create } = await prompts({
+        type: "confirm",
+        name: "create",
+        message: "Level db not exist, create?",
+        initial: true,
+      });
+      if (!create) {
+        fatal("");
+      }
+      db = levelup(encode(leveldown(dbPath), { valueEncoding: argv.encoding }));
+    } else {
+      return fatal("db not exist");
+    }
+  } else {
+    db = levelup(encode(leveldown(dbPath), { valueEncoding: argv.encoding }));
+  }
   const cmds = {
     async get(key) {
       try {
-        const data = await db.get(key);
-        if (typeof data === "string") {
-          console.log(data);
-        } else {
-          console.log(JSON.stringify(data));
-        }
+        const value = await db.get(key);
+        console.log(serialValue(value));
       } catch (err) {
-        return fatal(`not found`);
+        return fatal(`key not found`);
       }
     },
     async put(key, value) {
@@ -115,7 +133,7 @@ async function main() {
             all: true,
           });
           if (keys.length === 0) {
-            return fatal(`not found`);
+            return fatal(`key not found`);
           }
           const batch = db.batch();
           keys.forEach((key) => batch.del(key));
@@ -132,6 +150,7 @@ async function main() {
       let index = 0;
       const addRecord = (key, value) => {
         if (index < offset) return;
+        value = serialValue(value);
         if (onlyKeys) {
           records.push(key);
         } else if (onlyValues) {
@@ -155,7 +174,6 @@ async function main() {
       return records;
     },
   };
-  const [cmd] = argv._;
   if (cmd === "get") {
     await cmds.get(argv.key);
   } else if (cmd === "put" || cmd === "set") {
@@ -171,9 +189,8 @@ async function main() {
       if (argv.json) {
         console.log(JSON.stringify(records));
       } else {
-        const table = new Table({
-          rows: records,
-        });
+        const table = new Table();
+        table.push(...records);
         console.log(table.toString());
       }
     }
@@ -193,6 +210,13 @@ function parsePattern(key) {
   } catch {
     return fatal(`invalid pattern`);
   }
+}
+
+function serialValue(value) {
+  if (typeof value === "object") {
+    return JSON.stringify(value);
+  }
+  return value;
 }
 
 main();
